@@ -1,0 +1,16 @@
+{
+  "title": "Clear Expired Keys",
+  "name": "clear-expired-keys",
+  "version": "1.0.0",
+  "author": "rmiroballi@nvisia.com",
+  "description": "TThis extension will clear user app_metadata where the key is expired.",
+  "type": "cron",
+  "keywords": [
+    "auth0",
+    "extension"
+  ],
+  "schedule": "0 0 * * *",
+  "auth0": {
+    "scopes": "update:users update:users_app_metadata read:users"
+  }
+}
