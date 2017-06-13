@@ -18,6 +18,8 @@ function clearExpiredKeys (req, res) {
     return res.status(400).send({ message: 'Missing settings: ' + missing_settings.join(', ') });
   }
   
+  var context = {};
+  
   // Start the process.
   async.waterfall([
     (callback) => {
@@ -36,14 +38,19 @@ function clearExpiredKeys (req, res) {
         if(context.users && context.users.length > 0) {
           //Cap it to 100 users at a time.
           var max = context.users.length > 100 ? 100 : context.users.length;
-          
-          async.eachLimit(context.users, max, clearKeys(req.webtaskContext.data.AUTH0_DOMAIN, req.access_token, user, callback), function(err) {
+          console.log('Removing ' + max);
+          async.eachLimit(context.users, max, (user, cb) => {
+            clearKeys(req.webtaskContext.data.AUTH0_DOMAIN, req.access_token, user.user_id, cb);
+          }, function(user_id, err) {
             if(err) {
               console.log(err);
             }            
           });
           
+        } else {
+          console.log('Removing 0');
         }
+        
         return callback(null, context);
       }
     ], 
@@ -60,7 +67,7 @@ function clearExpiredKeys (req, res) {
 }
 
 function getExpiredKeysFromAuth0 (domain, token, cb) {
-  var url = 'https://${domain}/api/v2/users';
+  var url = 'https://'+domain+'/api/v2/users';
   var now = Date.now(); 
 
   Request({
@@ -87,15 +94,15 @@ function getExpiredKeysFromAuth0 (domain, token, cb) {
   });
 }
 
-function clearKeys (domain, token, user, cb) {
-  var url = 'https://${domain}/api/v2/users/'+user;
+function clearKeys (domain, token, user_id, cb) {
+  var url = 'https://'+domain+'/api/v2/users/'+user_id;
 
   Request({
     method: 'PATCH',
     url: url,
     json: true,
     body: {
-      app_metadata: '{}'
+      app_metadata: {}
     },
     headers: {
       Authorization: `Bearer ${token}`,
